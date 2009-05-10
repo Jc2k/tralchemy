@@ -75,9 +75,15 @@ class WrapperFactory(object):
         for result in results:
             classname = result[0]
             klass = self.get_class(classname)
+            yield klass
 
 if __name__ == "__main__":
     w = WrapperFactory()
     #help(w.get_class("rdfs:Resource"))
     #help(w.get_class("rdfs:Class"))
-    w.get_all()
+    self = __import__(__name__)
+    for cls in w.get_all():
+        setattr(self, cls.__name__, cls)
+    help(self)
+
+
