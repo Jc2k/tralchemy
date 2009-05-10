@@ -9,6 +9,13 @@ class Resource(object):
     def __init__(self, uri):
         self.uri = uri
 
+    @classmethod
+    def get(cls, **kwargs):
+        results = cls.get_tracker().SparqlQuery("SELECT ?o WHERE { ?o rdf:type %s }" % cls._type_)
+        for result in results:
+            classname = result[0]
+            yield cls(classname)
+
     @staticmethod
     def get_tracker():
         #FIXME: Share this bit
@@ -45,19 +52,8 @@ class Class(Resource):
     subclassof = Property("rdfs:subClassOf")
     comment = Property("rdfs:comment")
     label = Property("rdfs:label")
-    # type = Property("rdfs:type")
-    notify = Property("tracker:notify")
-
-    @classmethod
-    def get(cls, **kwargs):
-        # for k,v in kwargs: restrict ?uri k val
-        tracker = cls.get_tracker()
-        for result in tracker.SparqlQuery("SELECT ?o WHERE { ?o rdf:type %s }" % cls.type):
-            yield cls(result[0])
-
-    def commit(self):
-        """ Make some changes then call this to store them in tracker """
-        pass
+    type = Property("rdf:type")
+    notity = Property("tracker:notify")
 
 
 class WrapperFactory(object):
