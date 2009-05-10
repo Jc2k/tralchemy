@@ -77,9 +77,8 @@ class WrapperFactory(object):
             self.prefix_to_ns[prefix] = namespace
             self.ns_to_prefix[namespace] = prefix
 
-        self.wrapped[Class._type_] = Class
-        self.wrapped[Property._type_] = Property
-        self.wrapped[Resource._type_] = Resource
+        for cls in (Class, Property, Resource):
+            self.wrapped[cls._type_] = cls
 
     def get_classname(self, classname):
         """ Takes a classname and flattens it into tracker form """
