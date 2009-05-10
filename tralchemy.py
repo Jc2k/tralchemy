@@ -116,7 +116,7 @@ class WrapperFactory(object):
         klass = type(str(classname), tuple(baseclass), attrs)
 
         # Cache it for later
-        self.wrapped[klass.type] = klass
+        self.wrapped[klass._type_] = klass
 
         return klass
 
