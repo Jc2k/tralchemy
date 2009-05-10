@@ -98,7 +98,7 @@ class WrapperFactory(object):
         cls = Class(classname)
 
         attrs = {
-            "_type_": classname,
+            "_type_": cls.uri,
             "__doc__": cls.comment or ""
         }
 
