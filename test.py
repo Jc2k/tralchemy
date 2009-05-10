@@ -1,6 +1,31 @@
 
 import dbus
 
+class Resource(object):
+    """ Everything is a resource """
+
+    def commit(self):
+        """ Make changes to this object stick """
+        pass
+
+class Property(Resource, property):
+
+    def __init__(self, name, doc):
+        self.name = name
+        self.__doc__ = doc
+
+    def getter(self):
+        return "badger"
+
+    def setter(self, value):
+        pass
+
+    def deleter(self):
+        pass
+
+class Class(Resource):
+    pass
+
 class WrapperFactory(object):
 
     def __init__(self):
@@ -19,6 +44,10 @@ class WrapperFactory(object):
             self.prefix_to_ns[prefix] = namespace
             self.ns_to_prefix[namespace] = prefix
 
+        self.wrapped['rdfs:Class'] = Class
+        self.wrapped['rdfs:Property'] = Property
+        self.wrapped['rdfs:Resource'] = Resource
+
     def get_classname(self, classname):
         """ Takes a classname and flattens it into tracker form """
         if classname.startswith("http://"):
@@ -34,7 +63,7 @@ class WrapperFactory(object):
             return self.wrapped[classname]
 
         attrs = {}
-        baseclass = [object]
+        baseclass = [Class]
 
         # Get class.. metadata..
         results = self.tracker.SparqlQuery("SELECT ?k ?v WHERE { %s ?k ?v }" % classname)
@@ -55,11 +84,7 @@ class WrapperFactory(object):
         # Get all properties of this class
         properties = self.tracker.SparqlQuery("SELECT ?prop ?label ?comment WHERE { ?prop rdfs:domain %s . ?prop rdfs:label ?label . ?prop rdfs:comment ?comment }" % classname)
         for name, label, comment in properties:
-            def getter(self):
-                return "badgers"
-            def setter(self, value):
-                pass
-            prop = property(fget=getter, fset=setter, doc=comment)
+            prop = Property(name, comment)
             attrs[label.lower().replace(" ", "_")] = prop
 
         # Make a new class
