@@ -4,7 +4,7 @@ import dbus
 class Resource(object):
     """ Everything is a resource """
 
-    type = "rdfs:Resource"
+    _type_ = "rdfs:Resource"
 
     def __init__(self, uri):
         self.uri = uri
@@ -19,7 +19,7 @@ class Resource(object):
 
 class Property(Resource):
 
-    type = "rdfs:Property"
+    _type_ = "rdfs:Property"
 
     def __init__(self, uri, doc=""):
         super(Property, self).__init__(uri)
@@ -40,7 +40,7 @@ class Property(Resource):
 
 class Class(Resource):
 
-    type = "rdfs:Class"
+    _type_ = "rdfs:Class"
 
     subclassof = Property("rdfs:subClassOf")
     comment = Property("rdfs:comment")
@@ -78,9 +78,9 @@ class WrapperFactory(object):
             self.prefix_to_ns[prefix] = namespace
             self.ns_to_prefix[namespace] = prefix
 
-        self.wrapped[Class.type] = Class
-        self.wrapped[Property.type] = Property
-        self.wrapped[Resource.type] = Resource
+        self.wrapped[Class._type_] = Class
+        self.wrapped[Property._type_] = Property
+        self.wrapped[Resource._type_] = Resource
 
     def get_classname(self, classname):
         """ Takes a classname and flattens it into tracker form """
@@ -97,7 +97,7 @@ class WrapperFactory(object):
             return self.wrapped[classname]
 
         attrs = {
-            "type": classname,
+            "_type_": classname,
         }
 
         cls = Class(classname)
