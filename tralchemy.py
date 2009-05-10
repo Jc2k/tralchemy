@@ -100,18 +100,15 @@ class WrapperFactory(object):
             "_type_": classname,
         }
 
-        cls = Class(classname)
-
-        if cls.subclassof != None:
-            baseclass = [self.get_class(cls.subclassof)]
-        else:
-            baseclass = [Class]
+        baseclass = [Resource]
 
         # Get class.. metadata..
         results = self.tracker.SparqlQuery("SELECT ?k ?v WHERE { %s ?k ?v }" % classname)
         for key, value in results:
             if key == "http://www.w3.org/2000/01/rdf-schema#comment":
                 attrs['__doc__'] = value
+            elif key == "http://www.w3.org/2000/01/rdf-schema#subClassOf":
+                baseclass = [self.get_class(value)]
 
         # Get all properties of this class
         properties = self.tracker.SparqlQuery("SELECT ?prop ?label ?comment WHERE { ?prop rdfs:domain %s . ?prop rdfs:label ?label . ?prop rdfs:comment ?comment }" % classname)
