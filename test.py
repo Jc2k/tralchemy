@@ -29,7 +29,6 @@ class WrapperFactory(object):
 
     def get_class(self, classname):
         classname = self.get_classname(classname)
-        print classname
 
         if classname in self.wrapped:
             return self.wrapped[classname]
@@ -44,6 +43,12 @@ class WrapperFactory(object):
                 attrs['__doc__'] = value
             elif key == "http://www.w3.org/2000/01/rdf-schema#subClassOf":
                 baseclass = [self.get_class(value)]
+            elif key == "http://www.w3.org/1999/02/22-rdf-syntax-ns#type":
+                pass
+            elif key == "http://www.w3.org/2000/01/rdf-schema#label":
+                pass
+            elif key == "http://www.tracker-project.org/ontologies/tracker#notify":
+                pass
             else:
                 print key, value
 
@@ -74,5 +79,5 @@ class WrapperFactory(object):
 if __name__ == "__main__":
     w = WrapperFactory()
     #help(w.get_class("rdfs:Resource"))
-    help(w.get_class("rdfs:Class"))
-    #w.get_all()
+    #help(w.get_class("rdfs:Class"))
+    w.get_all()
