@@ -1,6 +1,26 @@
 
 import dbus
 
+bus = dbus.SessionBus()
+tracker_obj = bus.get_object("org.freedesktop.Tracker", "/org/freedesktop/Tracker/Resources")
+tracker = dbus.Interface(tracker_obj, "org.freedesktop.Tracker.Resources")
+
+# Map tracker prefixes to ontology namespaces and back
+prefix_to_ns = {}
+ns_to_prefix = {}
+for prefix, namespace in tracker.SparqlQuery("SELECT ?prefix, ?ns WHERE { ?ns tracker:prefix ?prefix }"):
+    prefix_to_ns[prefix] = namespace
+    ns_to_prefix[namespace] = prefix
+
+def get_classname(classname):
+    """ Takes a classname and flattens it into tracker form """
+    if classname.startswith("http://"):
+        for ns, prefix in ns_to_prefix.iteritems():
+            if classname.startswith(ns):
+                return prefix + ":" + classname[len(ns):]
+    return classname
+
+
 class Resource(object):
     """ Everything is a resource """
 
@@ -11,22 +31,21 @@ class Resource(object):
 
     @classmethod
     def get(cls, **kwargs):
-        results = cls.get_tracker().SparqlQuery("SELECT ?o WHERE { ?o rdf:type %s }" % cls._type_)
+        fragment = ""
+        for key, value in kwargs.iteritems():
+            key = getattr(cls, key).uri
+            fragment += " . ?o %s %s" % (key, value)
+
+        results = tracker.SparqlQuery("SELECT ?o WHERE { ?o rdf:type %s %s}" % (cls._type_, fragment))
         for result in results:
             classname = result[0]
+            classname = get_classname(classname)
             yield cls(classname)
-
-    @staticmethod
-    def get_tracker():
-        #FIXME: Share this bit
-        bus = dbus.SessionBus()
-        tracker = bus.get_object("org.freedesktop.Tracker", "/org/freedesktop/Tracker/Resources")
-        return dbus.Interface(tracker, "org.freedesktop.Tracker.Resources")
 
 
 class Property(Resource, property):
 
-    _type_ = "rdfs:Property"
+    _type_ = "rdf:Property"
 
     def __init__(self, uri, doc=""):
         super(Property, self).__init__(uri)
@@ -36,7 +55,7 @@ class Property(Resource, property):
         if instance is None:
             return self
 
-        results = self.get_tracker().SparqlQuery("SELECT ?v WHERE { %s %s ?v }" % (instance.uri, self.uri))
+        results = tracker.SparqlQuery("SELECT ?v WHERE { %s %s ?v }" % (instance.uri, self.uri))
         for result in results:
             #FIXME: What to do about lists of stuff. What to do about stuff that isnt a string.
             return result[0]
@@ -47,6 +66,11 @@ class Property(Resource, property):
     def __delete__(self, instance):
         pass
 
+# Now Resource and Property exist, monkey patch them with some properties
+Resource.comment = Property("rdfs:comment")
+Resource.label = Property("rdfs:label")
+Resource.type = Property("rdf:type")
+
 Property.domain = Property("rdfs:domain")
 Property.subpropertyof = Property("rdfs:subPropertyOf")
 Property.range = Property("rdfs:range")
@@ -54,15 +78,14 @@ Property.indexed = Property("tracker:indexed")
 Property.fulltextindexed = Property("tracker:fulltextIndexed")
 Property.transient = Property("tracker:transient")
 
+
 class Class(Resource):
 
     _type_ = "rdfs:Class"
 
     subclassof = Property("rdfs:subClassOf")
-    comment = Property("rdfs:comment")
-    label = Property("rdfs:label")
-    type = Property("rdf:type")
-    notity = Property("tracker:notify")
+    notify = Property("tracker:notify")
+
 
 
 class WrapperFactory(object):
@@ -76,26 +99,11 @@ class WrapperFactory(object):
         tracker_object = self.bus.get_object("org.freedesktop.Tracker", "/org/freedesktop/Tracker/Resources")
         self.tracker = dbus.Interface(tracker_object, "org.freedesktop.Tracker.Resources")
 
-        # Map tracker prefixes to ontology namespaces and back
-        self.prefix_to_ns = {}
-        self.ns_to_prefix = {}
-        for prefix, namespace in self.tracker.SparqlQuery("SELECT ?prefix, ?ns WHERE { ?ns tracker:prefix ?prefix }"):
-            self.prefix_to_ns[prefix] = namespace
-            self.ns_to_prefix[namespace] = prefix
-
         for cls in (Class, Property, Resource):
             self.wrapped[cls._type_] = cls
 
-    def get_classname(self, classname):
-        """ Takes a classname and flattens it into tracker form """
-        if classname.startswith("http://"):
-            for ns, prefix in self.ns_to_prefix.iteritems():
-                if classname.startswith(ns):
-                    return prefix + ":" + classname[len(ns):]
-        return classname
-
     def get_class(self, classname):
-        classname = self.get_classname(classname)
+        classname = get_classname(classname)
 
         if classname in self.wrapped:
             return self.wrapped[classname]
@@ -115,11 +123,9 @@ class WrapperFactory(object):
         else:
             baseclass = [Resource]
 
-        # Get all properties of this class
-        properties = self.tracker.SparqlQuery("SELECT ?prop ?label ?comment WHERE { ?prop rdfs:domain %s . ?prop rdfs:label ?label . ?prop rdfs:comment ?comment }" % classname)
-        for name, label, comment in properties:
-            prop = Property(name, comment)
-            attrs[label.lower().replace(" ", "_")] = prop
+        for prop in Property.get(domain=cls.uri):
+            if prop.label:
+                attrs[prop.label.lower().replace(" ", "_")] = prop
 
         # Make a new class
         klass = type(str(classname), tuple(baseclass), attrs)
