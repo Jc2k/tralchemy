@@ -1,0 +1,5 @@
+ * Notify: If a class is marked with tracker:notify then we should attach appropriate helps for listening
+   for changes
+ * Label: What the heck is the intention of the label property. A few ontologies use camel case, making it
+   appropriate as a name for classes and properties. However a few have spaces, making it not :( :(
+ * Modules: Would probably make sense to have a virtual module per namespace
