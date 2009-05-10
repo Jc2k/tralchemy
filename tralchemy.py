@@ -32,16 +32,19 @@ class Property(Resource, property):
         super(Property, self).__init__(uri)
         self.__doc__ = doc
 
-    def get__(self, obj, cls):
-        results = self.get_tracker().SparqlQuery("SELECT ?v WHERE { %s %s ?v }" % (obj.uri, self.uri))
+    def __get__(self, instance, instance_type):
+        if instance is None:
+            return self
+
+        results = self.get_tracker().SparqlQuery("SELECT ?v WHERE { %s %s ?v }" % (instance.uri, self.uri))
         for result in results:
             #FIXME: What to do about lists of stuff. What to do about stuff that isnt a string.
             return result[0]
 
-    def set__(self, obj, value):
+    def __set__(self, instance, value):
         pass
 
-    def delete__(self, obj):
+    def __delete__(self, instance):
         pass
 
 
