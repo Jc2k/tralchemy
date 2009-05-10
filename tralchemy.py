@@ -120,16 +120,14 @@ class WrapperFactory(object):
 
         return klass
 
-    def get_all(self):
-        for cls in Class.get():
-            yield self.get_class(cls.uri)
 
 if __name__ == "__main__":
     w = WrapperFactory()
     #help(w.get_class("rdfs:Resource"))
     #help(w.get_class("rdfs:Class"))
     self = __import__(__name__)
-    for cls in w.get_all():
+    for cls in Class.get():
+        cls = w.get_class(cls.uri)
         setattr(self, cls.__name__, cls)
     help(self)
 
