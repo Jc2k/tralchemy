@@ -2,6 +2,9 @@
 import dbus
 
 class Resource(object):
+
+    type = "rdfs:Resource"
+
     """ Everything is a resource """
 
     def commit(self):
@@ -9,6 +12,8 @@ class Resource(object):
         pass
 
 class Property(Resource):
+
+    type = "rdfs:Property"
 
     def __init__(self, name, doc):
         self.name = name
@@ -24,7 +29,29 @@ class Property(Resource):
         pass
 
 class Class(Resource):
-    pass
+
+    type = "rdfs:Class"
+
+    def __init__(self, uri):
+        self.uri = uri
+
+    @classmethod
+    def get(cls, **kwargs):
+        # for k,v in kwargs: restrict ?uri k val
+        tracker = cls.get_tracker()
+        for result in tracker.SparqlQuery("SELECT ?o WHERE { ?o rdf:type %s }" % cls.type):
+            yield cls(result[0])
+
+    def commit(self):
+        """ Make some changes then call this to store them in tracker """
+        pass
+
+    @staticmethod
+    def get_tracker():
+        #FIXME: Share this bit
+        bus = dbus.SessionBus()
+        tracker = bus.get_object("org.freedesktop.Tracker", "/org/freedesktop/Tracker/Resources")
+        return dbus.Interface(tracker, "org.freedesktop.Tracker.Resources")
 
 class WrapperFactory(object):
 
@@ -96,11 +123,8 @@ class WrapperFactory(object):
         return klass
 
     def get_all(self):
-        results = self.tracker.SparqlQuery("SELECT ?o WHERE { ?o rdf:type rdfs:Class }")
-        for result in results:
-            classname = result[0]
-            klass = self.get_class(classname)
-            yield klass
+        for cls in Class.get():
+            yield self.get_class(cls.uri)
 
 if __name__ == "__main__":
     w = WrapperFactory()
