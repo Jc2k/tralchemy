@@ -47,6 +47,12 @@ class Property(Resource, property):
     def __delete__(self, instance):
         pass
 
+Property.domain = Property("rdfs:domain")
+Property.subpropertyof = Property("rdfs:subPropertyOf")
+Property.range = Property("rdfs:range")
+Property.indexed = Property("tracker:indexed")
+Property.fulltextindexed = Property("tracker:fulltextIndexed")
+Property.transient = Property("tracker:transient")
 
 class Class(Resource):
 
