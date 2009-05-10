@@ -8,19 +8,19 @@ class Resource(object):
         """ Make changes to this object stick """
         pass
 
-class Property(Resource, property):
+class Property(Resource):
 
     def __init__(self, name, doc):
         self.name = name
         self.__doc__ = doc
 
-    def getter(self):
+    def __get__(self, obj, cls):
         return "badger"
 
-    def setter(self, value):
+    def __set__(self, obj, value):
         pass
 
-    def deleter(self):
+    def __delete__(self, obj):
         pass
 
 class Class(Resource):
