@@ -17,7 +17,7 @@ class Resource(object):
         return dbus.Interface(tracker, "org.freedesktop.Tracker.Resources")
 
 
-class Property(Resource):
+class Property(Resource, property):
 
     _type_ = "rdfs:Property"
 
