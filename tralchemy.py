@@ -71,9 +71,9 @@ class WrapperFactory(object):
             self.prefix_to_ns[prefix] = namespace
             self.ns_to_prefix[namespace] = prefix
 
-        self.wrapped['rdfs:Class'] = Class
-        self.wrapped['rdfs:Property'] = Property
-        self.wrapped['rdfs:Resource'] = Resource
+        self.wrapped[Class.type] = Class
+        self.wrapped[Property.type] = Property
+        self.wrapped[Resource.type] = Resource
 
     def get_classname(self, classname):
         """ Takes a classname and flattens it into tracker form """
@@ -89,7 +89,10 @@ class WrapperFactory(object):
         if classname in self.wrapped:
             return self.wrapped[classname]
 
-        attrs = {}
+        attrs = {
+            "type": classname,
+        }
+
         baseclass = [Class]
 
         # Get class.. metadata..
@@ -118,7 +121,7 @@ class WrapperFactory(object):
         klass = type(str(classname), tuple(baseclass), attrs)
 
         # Cache it for later
-        self.wrapped[classname] = klass
+        self.wrapped[klass.type] = klass
 
         return klass
 
