@@ -12,6 +12,15 @@ for prefix, namespace in tracker.SparqlQuery("SELECT ?prefix, ?ns WHERE { ?ns tr
     prefix_to_ns[prefix] = namespace
     ns_to_prefix[namespace] = prefix
 
+# Map tracker types to python types
+types = {
+    "http://www.w3.org/2001/XMLSchema#boolean": lambda x: x=='true',
+    "http://www.w3.org/2001/XMLSchema#integer": int,
+    "http://www.w3.org/2001/XMLSchema#double": float,
+    "http://www.w3.org/2000/01/rdf-schema#Literal": str,
+    "http://www.w3.org/2001/XMLSchema#string": str,
+}
+
 def get_classname(classname):
     """ Takes a classname and flattens it into tracker form """
     if classname.startswith("http://"):
@@ -58,7 +67,14 @@ class Property(Resource, property):
         results = tracker.SparqlQuery("SELECT ?v WHERE { %s %s ?v }" % (instance.uri, self.uri))
         for result in results:
             #FIXME: What to do about lists of stuff. What to do about stuff that isnt a string.
-            return result[0]
+            result = result[0]
+
+            if self.uri == 'rdfs:domain':
+                return result
+            elif self.domain in types:
+                return types[self.domain](result)
+            else:
+                return result
 
     def __set__(self, instance, value):
         pass
@@ -146,4 +162,11 @@ if __name__ == "__main__":
         setattr(self, cls.__name__, cls)
     help(self)
 
+    foo = {}
+    for p in Property.get():
+        foo.setdefault(p.range, 0)
+        foo[p.range] += 1
+
+    for k, v in foo.items():
+        print k, v
 
