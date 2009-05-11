@@ -50,7 +50,7 @@ class Property(Resource, property):
     def __init__(self, uri, doc=""):
         super(Property, self).__init__(uri)
         if self.uri != 'rdfs:comment' and self.comment:
-            self.__doc__ = self.comment.uri
+            self.__doc__ = self.comment
 
     def __get__(self, instance, instance_type):
         if instance is None:
@@ -60,11 +60,10 @@ class Property(Resource, property):
         for result in results:
             #FIXME: What to do about lists of stuff. What to do about stuff that isnt a string.
             result = result[0]
-
-            if self.uri == 'rdfs:domain':
+            if self.uri == "rdfs:range":
                 return str(result)
             else:
-                return types.get_class(self.domain)(result)
+                return types.get_class(self.range)(result)
 
     def __set__(self, instance, value):
         pass
@@ -139,7 +138,7 @@ class WrapperFactory(object):
 
         for prop in Property.get(domain=cls.uri):
             if prop.label:
-                attrs[prop.label.uri.lower().replace(" ", "_")] = prop
+                attrs[prop.label.lower().replace(" ", "_")] = prop
 
         # Make a new class
         klass = type(str(classname), tuple(baseclass), attrs)
@@ -162,8 +161,8 @@ if __name__ == "__main__":
 
     foo = {}
     for p in Property.get():
-        foo.setdefault(p.range.uri, 0)
-        foo[p.range.uri] += 1
+        foo.setdefault(p.range, 0)
+        foo[p.range] += 1
 
     for k, v in foo.items():
         print k, v
