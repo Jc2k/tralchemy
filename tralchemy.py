@@ -61,7 +61,7 @@ class Property(Resource, property):
             result = result[0]
 
             if self.uri == 'rdfs:domain':
-                return result
+                return str(result)
             else:
                 return types.get_class(self.domain)(result)
 
