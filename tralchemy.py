@@ -12,15 +12,6 @@ for prefix, namespace in tracker.SparqlQuery("SELECT ?prefix, ?ns WHERE { ?ns tr
     prefix_to_ns[prefix] = namespace
     ns_to_prefix[namespace] = prefix
 
-# Map tracker types to python types
-types = {
-    "http://www.w3.org/2001/XMLSchema#boolean": lambda x: x=='true',
-    "http://www.w3.org/2001/XMLSchema#integer": int,
-    "http://www.w3.org/2001/XMLSchema#double": float,
-    "http://www.w3.org/2000/01/rdf-schema#Literal": str,
-    "http://www.w3.org/2001/XMLSchema#string": str,
-}
-
 def get_classname(classname):
     """ Takes a classname and flattens it into tracker form """
     if classname.startswith("http://"):
@@ -71,10 +62,8 @@ class Property(Resource, property):
 
             if self.uri == 'rdfs:domain':
                 return result
-            elif self.domain in types:
-                return types[self.domain](result)
             else:
-                return result
+                return types.get_class(self.domain)(result)
 
     def __set__(self, instance, value):
         pass
@@ -118,6 +107,14 @@ class WrapperFactory(object):
         for cls in (Class, Property, Resource):
             self.wrapped[cls._type_] = cls
 
+        self.wrapped["xsd:boolean"] = lambda x: x=='true'
+        self.wrapped["xsd:integer"] = int
+        self.wrapped["xsd:double"] = float
+        self.wrapped["rdfs:Literal"] = str
+        self.wrapped["xsd:string"] = str
+        self.wrapped['xsd:date'] = str
+        self.wrapped['xsd:dateTime'] = str
+
     def get_class(self, classname):
         classname = get_classname(classname)
 
@@ -135,13 +132,13 @@ class WrapperFactory(object):
         # FIXME: subclassof should return an object!!
         baseclass = cls.subclassof
         if baseclass:
-            baseclass = [self.get_class(baseclass)]
+            baseclass = [self.get_class(baseclass.uri)]
         else:
             baseclass = [Resource]
 
         for prop in Property.get(domain=cls.uri):
             if prop.label:
-                attrs[prop.label.lower().replace(" ", "_")] = prop
+                attrs[prop.label.uri.lower().replace(" ", "_")] = prop
 
         # Make a new class
         klass = type(str(classname), tuple(baseclass), attrs)
@@ -151,21 +148,21 @@ class WrapperFactory(object):
 
         return klass
 
+types = WrapperFactory()
 
 if __name__ == "__main__":
-    w = WrapperFactory()
     #help(w.get_class("rdfs:Resource"))
     #help(w.get_class("rdfs:Class"))
     self = __import__(__name__)
     for cls in Class.get():
-        cls = w.get_class(cls.uri)
+        cls = types.get_class(cls.uri)
         setattr(self, cls.__name__, cls)
     help(self)
 
     foo = {}
     for p in Property.get():
-        foo.setdefault(p.range, 0)
-        foo[p.range] += 1
+        foo.setdefault(p.range.uri, 0)
+        foo[p.range.uri] += 1
 
     for k, v in foo.items():
         print k, v
