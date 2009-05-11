@@ -28,6 +28,7 @@ class Resource(object):
 
     def __init__(self, uri):
         self.uri = get_classname(uri)
+        self.triples = {}
 
     @classmethod
     def get(cls, **kwargs):
@@ -41,6 +42,17 @@ class Resource(object):
             classname = result[0]
             classname = get_classname(classname)
             yield cls(classname)
+
+    def delete(self):
+        tracker.SparqlUpdate("DELETE { <%s> a %s. }" % (self.uri, self._type_))
+
+    def commit(self):
+        query = "INSERT { <%s> a %s" % (self.uri, self._type_)
+        for k, v in self.triples.iteritems():
+            query += " ; %s %s" % (k, v)
+        query += " . }"
+        tracker.SparqlUpdate(query)
+        self.triples = {}
 
 
 class Property(Resource, property):
@@ -66,10 +78,13 @@ class Property(Resource, property):
                 return types.get_class(self.range)(result)
 
     def __set__(self, instance, value):
-        pass
+        if instance is None:
+            return
+        self.triples[self._type_] = value
 
     def __delete__(self, instance):
         pass
+
 
 # Now Resource and Property exist, monkey patch them with some properties
 Resource.comment = Property("rdfs:comment")

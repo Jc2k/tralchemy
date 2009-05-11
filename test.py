@@ -2,6 +2,8 @@
 
 import tralchemy
 import unittest
+import uuid
+import datetime
 
 class TralchemyTests(unittest.TestCase):
 
@@ -42,6 +44,30 @@ class TralchemyTests(unittest.TestCase):
         assert type(cls1.artist) == tralchemy.Property, "Got %s" % type(cls1.artist)
         # But now we are access the contents of artist, which is an instance, so it runs __get__ and should return a comment
         assert type(cls1.artist.comment) == str, "Got %s" % type(cls1.artist.comment)
+
+    def test_inject_feed(self):
+        feedmsgcls = self.wrapper.get_class("nmo:FeedMessage")
+        feedmsg = feedmsgcls("http://localhost/feed/%s" % str(uuid.uuid4()))
+        today = datetime.datetime.today()
+        date = today.isoformat() + "+00:00"
+
+        feedmsg.contentlastmodified = date
+        feedmsg.communicationchannel = "http://planet.gnome.org/atom.xml"
+        feedmsg.title = "Your face"
+        feedmsg.commit()
+
+    def test_delete(self):
+        FeedMessage = self.wrapper.get_class("nmo:FeedMessage")
+        self.test_inject_feed()
+        a = 0
+        for msg in FeedMessage.get():
+            a += 1
+            msg.delete()
+        assert a > 0
+        b = 0
+        for msg in FeedMessage.get():
+            b += 1
+        assert b == 0
 
 
 if __name__ == '__main__':
