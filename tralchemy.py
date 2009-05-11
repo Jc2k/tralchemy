@@ -27,7 +27,7 @@ class Resource(object):
     _type_ = "rdfs:Resource"
 
     def __init__(self, uri):
-        self.uri = uri
+        self.uri = get_classname(uri)
 
     @classmethod
     def get(cls, **kwargs):
@@ -49,7 +49,8 @@ class Property(Resource, property):
 
     def __init__(self, uri, doc=""):
         super(Property, self).__init__(uri)
-        self.__doc__ = doc
+        if self.uri != 'rdfs:comment' and self.comment:
+            self.__doc__ = self.comment.uri
 
     def __get__(self, instance, instance_type):
         if instance is None:
