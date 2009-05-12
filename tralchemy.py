@@ -21,6 +21,20 @@ def get_classname(classname):
     return classname
 
 
+class Notifications(object):
+    """ Class to allow users to attach signals to a class of object """
+    def __init__(self, uri):
+        self.uri = uri.replace(":", "/")
+
+    def connect(self, signal, callback):
+        def _(subjects):
+            subjects = [str(subject) for subject in subjects]
+            return callback(subjects)
+        bus.add_signal_receiver (_, signal_name=signal,
+                                 dbus_interface="org.freedesktop.Tracker.Resources.Class",
+                                 path="/org/freedesktop/Tracker/Resources/Classes/%s" % self.uri)
+
+
 class Resource(object):
     """ Everything is a resource """
 
@@ -151,6 +165,11 @@ class WrapperFactory(object):
         else:
             baseclass = [Resource]
 
+        # Does this class have notifications?
+        if cls.notify:
+            attrs['notifications'] = Notifications(cls.uri)
+
+        # Enumerate all properties of this class
         for prop in Property.get(domain=cls.uri):
             if prop.label:
                 attrs[prop.label.lower().replace(" ", "_")] = prop
