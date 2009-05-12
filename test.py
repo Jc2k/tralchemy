@@ -69,6 +69,9 @@ class TralchemyTests(unittest.TestCase):
             b += 1
         assert b == 0
 
+    def test_get_with_criteria(self):
+        Class = self.wrapper.get_class("rdfs:Class")
+        assert len(list(Class.get())) > len(list(Class.get(notify="true")))
 
 if __name__ == '__main__':
     unittest.main()
