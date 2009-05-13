@@ -5,8 +5,8 @@
 import tralchemy
 import mailbox
 
-Message = tralchemy.types.get_class("nmo:Message")
-Contact = tralchemy.types.get_class("nco:Contact")
+from tralchemy.nmo import Message
+from tralchemy.nco import Contact
 
 # Delete all messages
 count = 0

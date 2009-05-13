@@ -54,7 +54,7 @@ class Importer(object):
         if not name.startswith("tralchemy."):
             return None
         name = name[10:]
-        if name in ('namespace', 'core', 'dbus'):
+        if name in ('namespace', 'core', 'dbus', 'uuid'):
             return None
         if '.' in name:
             return None
