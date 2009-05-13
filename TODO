@@ -1,6 +1,6 @@
  * ?uri seems to be bad: If its an internal thing then it should error or be hidden completely, but instead i get results but they are empty strings
- * Notify: If a class is marked with tracker:notify then we should attach appropriate helps for listening
-   for changes
  * Label: What the heck is the intention of the label property. A few ontologies use camel case, making it
    appropriate as a name for classes and properties. However a few have spaces, making it not :( :(
- * Modules: Would probably make sense to have a virtual module per namespace
+ * cardinality: We treat everything as maxcardinality:1, need to be able to return lists and deal with setting lists.
+ * validation: accessing Message.to would return a Contact, equally a Message.to should only accept a Contact as a valid value
+ * more advanced querying. look at storm, alchemy etc for how to do this.
