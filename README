@@ -1,0 +1,36 @@
+This project aims to provide a simple API for dealing with data stored in the Tracker
+RDF store.
+
+Here are some simple examples to show the aim of the bindings (might differ from reality)
+
+
+import tralchemy
+from tralchemy.nco import Contact
+
+# delete all existing contacts
+for c in Contact.get():
+    c.delete()
+
+# add a contact
+c = Contact.create()
+c.fullname = "John Carr"
+c.firstname = "John"
+c.nickname = "Jc2k"
+c.commit()
+
+# find all the people called John
+for c in Contact.get(firstname="John"):
+    print c.uri, c.fullname
+
+# subscribe to any contact changes
+def callback(subjects):
+    print subjects
+Contact.notifications.connect("SubjectsAdded", callback)
+
+
+Tralchemy implements a objects for the sys.meta_path interface, allowing it to provide a
+virtual module for each tracker namespace. When you attempt to import a class from a
+namespace (as above), it is looked up in Tracker and bound at runtime. Complete with docstrings.
+
+It's planned that we'll be able to generate pydoc/epydoc documentation, complete with
+property type annotations.
