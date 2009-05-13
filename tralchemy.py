@@ -1,5 +1,6 @@
 
 import dbus
+import uuid
 
 bus = dbus.SessionBus()
 tracker_obj = bus.get_object("org.freedesktop.Tracker", "/org/freedesktop/Tracker/Resources")
@@ -56,6 +57,17 @@ class Resource(object):
             classname = result[0]
             classname = get_classname(classname)
             yield cls(classname)
+
+    @classmethod
+    def create(cls, **kwargs):
+        o = cls(kwargs.get('uid', 'http://localhost/resource/%s' % str(uuid.uuid4())))
+        for k, v in kwargs.iteritems():
+            if k == "uid" or k =="commit":
+                continue
+            setattr(o, k, v)
+        if not 'commit' in kwargs or kwargs['commit'] == True:
+            o.commit()
+        return o
 
     def delete(self):
         tracker.SparqlUpdate("DELETE { <%s> a %s. }" % (self.uri, self._type_))

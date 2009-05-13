@@ -6,6 +6,7 @@ import tralchemy
 import mailbox
 
 Message = tralchemy.types.get_class("nmo:Message")
+Contact = tralchemy.types.get_class("nco:Contact")
 
 # Delete all messages
 count = 0
@@ -20,18 +21,18 @@ count = 0
 mbox = mailbox.mbox("~/Desktop/2009-April.txt")
 for mail in mbox:
     count = count + 1
-    m = Message("http://localhost/message/"+str(count))
+    m = Message.create(commit=False)
 
     for field, value in mail.items():
         if field == 'To':
-            m.to = value
+            m.to = Contact.create(fullname=value)
         elif field == 'From':
             #from is a reserved word
             pass
         elif field == 'CC':
-            m.cc = value
+            m.cc = Contact.create(fullname=value)
         elif field == 'Bcc':
-            m.bcc = value
+            m.bcc = Contact.create(fullname=value)
 
     m.commit()
 
