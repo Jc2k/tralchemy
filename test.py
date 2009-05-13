@@ -1,53 +1,51 @@
 #! /usr/bin/env python
 
-import tralchemy
 import unittest
 import uuid
 import datetime
 
+import tralchemy
+
 class TralchemyTests(unittest.TestCase):
 
-    def setUp(self):
-        self.wrapper = tralchemy.WrapperFactory()
-
     def test_make_class(self):
-        cls = self.wrapper.get_class("nid3:ID3Audio")
-        assert cls != None
-        assert 'title' in dir(cls)
+        from tralchemy.nid3 import ID3Audio
+        assert ID3Audio != None
+        assert 'title' in dir(ID3Audio)
 
     def test_instance_class(self):
-        cls = self.wrapper.get_class("rdfs:Class")
-        obj = cls("nid3:ID3Audio")
+        from tralchemy.rdfs import Class
+        obj = Class("nid3:ID3Audio")
 
     def test_get_property(self):
-        cls = self.wrapper.get_class("rdfs:Class")
-        obj = cls("nid3:ID3Audio")
+        from tralchemy.rdfs import Class
+        obj = Class("nid3:ID3Audio")
         print obj.subclassof
 
     def test_set_property(self):
-        cls = self.wrapper.get_class("rdfs:Class")
-        obj = cls("nid3:ID3Audio")
+        from tralchemy.rdfs import Class
+        obj = Class("nid3:ID3Audio")
         obj.subclassof = "badger"
 
     def test_property_help(self):
-        cls = self.wrapper.get_class("nid3:ID3Audio")
-        assert cls.__doc__ != None
-        assert cls.artist != None
+        from tralchemy.nid3 import ID3Audio
+        assert ID3Audio.__doc__ != None
+        assert ID3Audio.artist != None
 
     def test_property_types_string(self):
-        cls2 = self.wrapper.get_class("xsd:string")
+        from tralchemy.xsd import string
         # If we ask wrapper for a string, we should get a string type
-        assert cls2 == str, "Got %s" % type(cls2)
+        assert string == str, "Got %s" % type(string)
 
-        cls1 = self.wrapper.get_class("nid3:ID3Audio")
+        from tralchemy.nid3 import ID3Audio
         # cls1 is a class, so accessing properties on it will return self rather then actually doing anything in __get__
-        assert type(cls1.artist) == tralchemy.Property, "Got %s" % type(cls1.artist)
+        assert type(ID3Audio.artist) == tralchemy.core.Property, "Got %s" % type(ID3Audio.artist)
         # But now we are access the contents of artist, which is an instance, so it runs __get__ and should return a comment
-        assert type(cls1.artist.comment) == str, "Got %s" % type(cls1.artist.comment)
+        assert type(ID3Audio.artist.comment) == str, "Got %s" % type(ID3Audio.artist.comment)
 
     def test_inject_feed(self):
-        feedmsgcls = self.wrapper.get_class("nmo:FeedMessage")
-        feedmsg = feedmsgcls("http://localhost/feed/%s" % str(uuid.uuid4()))
+        from tralchemy.nmo import FeedMessage
+        feedmsg = FeedMessage("http://localhost/feed/%s" % str(uuid.uuid4()))
         today = datetime.datetime.today()
         date = today.isoformat() + "+00:00"
 
@@ -57,7 +55,7 @@ class TralchemyTests(unittest.TestCase):
         feedmsg.commit()
 
     def test_delete(self):
-        FeedMessage = self.wrapper.get_class("nmo:FeedMessage")
+        from tralchemy.nmo import FeedMessage
         self.test_inject_feed()
         a = 0
         for msg in FeedMessage.get():
@@ -70,7 +68,7 @@ class TralchemyTests(unittest.TestCase):
         assert b == 0
 
     def test_get_with_criteria(self):
-        Class = self.wrapper.get_class("rdfs:Class")
+        from tralchemy.rdfs import Class
         assert len(list(Class.get())) > len(list(Class.get(notify="true")))
 
 if __name__ == '__main__':
