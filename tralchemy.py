@@ -88,7 +88,7 @@ class Property(Resource, property):
     def __init__(self, uri, doc=""):
         super(Property, self).__init__(uri)
         if self.uri != 'rdfs:comment' and self.comment:
-            self.__doc__ = self.comment
+            self.__doc__ = "%s\n\n@type: %s" % (self.comment, get_classname(self.range))
 
     def __get__(self, instance, instance_type):
         if instance is None:
