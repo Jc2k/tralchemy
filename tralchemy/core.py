@@ -94,7 +94,11 @@ class Property(Resource, property):
         if instance is None:
             return self
 
-        results = tracker.SparqlQuery("SELECT ?v WHERE { %s %s ?v }" % (instance.uri, self.uri))
+        uri = instance.uri
+        if uri.startswith("http://"):
+            uri = "<%s>" % uri
+
+        results = tracker.SparqlQuery("SELECT ?v WHERE { %s %s ?v }" % (uri, self.uri))
         for result in results:
             #FIXME: What to do about lists of stuff. What to do about stuff that isnt a string.
             result = result[0]
@@ -106,7 +110,13 @@ class Property(Resource, property):
     def __set__(self, instance, value):
         if instance is None:
             return
-        self.triples[self._type_] = value
+        if isinstance(value, Resource):
+            if value.uri.startswith("http://"):
+                instance.triples[self.uri] = "<%s>" % value.uri
+            else:
+                instance.triples[self.uri] = value.uri
+        else:
+            instance.triples[self.uri] = '"%s"' % value
 
     def __delete__(self, instance):
         pass
