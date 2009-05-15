@@ -71,5 +71,10 @@ class TralchemyTests(unittest.TestCase):
         from tralchemy.rdfs import Class
         assert len(list(Class.get())) > len(list(Class.get(notify="true")))
 
+    def test_query(self):
+        from tralchemy.nco import PersonContact
+        from tralchemy.query import Query, Store
+        q = Query(PersonContact.nickname for PersonContact in Store if PersonContact.fullname == "Rob Taylor" or PersonContact.fullname == "John Carr")
+
 if __name__ == '__main__':
     unittest.main()
