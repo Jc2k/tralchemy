@@ -22,14 +22,24 @@
 import dbus
 import uuid
 
+import dateutil.parser
+
 bus = dbus.SessionBus()
 tracker_obj = bus.get_object("org.freedesktop.Tracker", "/org/freedesktop/Tracker/Resources")
 tracker = dbus.Interface(tracker_obj, "org.freedesktop.Tracker.Resources")
 
+def tracker_query(sparql):
+    sparql = sparql.replace('\n', '\\n')
+    return tracker.SparqlQuery(sparql)
+
+def tracker_update(sparql):
+    sparql = sparql.replace('\n', '\\n')
+    return tracker.SparqlUpdate(sparql)
+
 # Map tracker prefixes to ontology namespaces and back
 prefix_to_ns = {}
 ns_to_prefix = {}
-for prefix, namespace in tracker.SparqlQuery("SELECT ?prefix, ?ns WHERE { ?ns tracker:prefix ?prefix }"):
+for prefix, namespace in tracker_query("SELECT ?prefix, ?ns WHERE { ?ns tracker:prefix ?prefix }"):
     prefix_to_ns[prefix] = namespace
     ns_to_prefix[namespace] = prefix
 
@@ -65,6 +75,14 @@ class Resource(object):
         self.uri = get_classname(uri)
         self.triples = {}
 
+    def properties(self):
+        uri = self.uri
+        if uri.startswith("http://"):
+            uri = "<%s>" % uri
+        results = tracker_query("SELECT ?key, ?value WHERE { %s ?key ?value }" % uri)
+        for key, value in results:
+            yield get_classname(str(key)), str(value)
+
     @classmethod
     def get(cls, **kwargs):
         fragment = ""
@@ -72,10 +90,9 @@ class Resource(object):
             key = getattr(cls, key).uri
             fragment += " . ?o %s %s" % (key, value)
 
-        results = tracker.SparqlQuery("SELECT ?o WHERE { ?o rdf:type %s %s}" % (cls._type_, fragment))
+        results = tracker_query("SELECT ?o WHERE { ?o rdf:type %s %s}" % (cls._type_, fragment))
         for result in results:
-            classname = result[0]
-            classname = get_classname(classname)
+            classname = get_classname(result[0])
             yield cls(classname)
 
     @classmethod
@@ -90,14 +107,19 @@ class Resource(object):
         return o
 
     def delete(self):
-        tracker.SparqlUpdate("DELETE { <%s> a %s. }" % (self.uri, self._type_))
+        #tracker_update("DELETE { <%s> ?p ?o }" % self.uri)
+        tracker_update("DELETE { <%s> a %s. }" % (self.uri, self._type_))
 
     def commit(self):
         query = "INSERT { <%s> a %s" % (self.uri, self._type_)
         for k, v in self.triples.iteritems():
-            query += " ; %s %s" % (k, v)
+            if isinstance(v, list):
+                for i in v:
+                    query += " ; %s %s" % (k, i)
+            else:
+                query += " ; %s %s" % (k, v)
         query += " . }"
-        tracker.SparqlUpdate(query)
+        tracker_update(query)
         self.triples = {}
 
 
@@ -118,7 +140,7 @@ class Property(Resource, property):
         if uri.startswith("http://"):
             uri = "<%s>" % uri
 
-        results = tracker.SparqlQuery("SELECT ?v WHERE { %s %s ?v }" % (uri, self.uri))
+        results = tracker_query("SELECT ?v WHERE { %s %s ?v }" % (uri, self.uri))
         for result in results:
             #FIXME: What to do about lists of stuff. What to do about stuff that isnt a string.
             result = result[0]
@@ -146,6 +168,7 @@ class Property(Resource, property):
 Resource.comment = Property("rdfs:comment")
 Resource.label = Property("rdfs:label")
 Resource.type = Property("rdf:type")
+Resource.modified = Property("tracker:modified")
 
 Property.domain = Property("rdfs:domain")
 Property.subpropertyof = Property("rdfs:subPropertyOf")
@@ -183,8 +206,8 @@ class WrapperFactory(object):
         self.wrapped["xsd:double"] = float
         self.wrapped["rdfs:Literal"] = str
         self.wrapped["xsd:string"] = str
-        self.wrapped['xsd:date'] = str
-        self.wrapped['xsd:dateTime'] = str
+        self.wrapped['xsd:date'] = lambda x: dateutil.parser.parser().parse(x)
+        self.wrapped['xsd:dateTime'] = lambda x: dateutil.parser.parser().parse(x)
 
     def get_class(self, classname):
         classname = get_classname(classname)
@@ -200,12 +223,12 @@ class WrapperFactory(object):
             "__doc__": cls.comment or ""
         }
 
-        # FIXME: subclassof should return an object!!
-        baseclass = cls.subclassof
-        if baseclass:
-            baseclass = [self.get_class(baseclass.uri)]
-        else:
-            baseclass = [Resource]
+        baseclass = []
+        for key, value in cls.properties():
+            if key == "rdfs:subClassOf":
+                baseclass.append(self.get_class(value))
+        if not baseclass:
+            baseclass.append(Resource)
 
         # Does this class have notifications?
         if cls.notify:

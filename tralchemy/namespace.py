@@ -32,7 +32,7 @@ class Namespace(object):
                     self.__class__.__name__, name))
 
         self.__dict__[name] = cls
-        return value
+        return cls
 
     @property
     def __members__(self):
@@ -51,7 +51,7 @@ class Importer(object):
     @staticmethod
     def find_module(name, path=None):
         #FIXME: This function is a bit of a hack
-        if not name.startswith("tralchemy."):
+        if not "tralchemy." in name:
             return None
         name = name[10:]
         if name in ('namespace', 'core', 'dbus', 'uuid', 'query', 'types', 'opcode', 'dis'):
