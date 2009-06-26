@@ -53,8 +53,8 @@ class Importer(object):
         #FIXME: This function is a bit of a hack
         if not "tralchemy." in name:
             return None
-        name = name[10:]
-        if name in ('namespace', 'core', 'dbus', 'uuid', 'query', 'types', 'opcode', 'dis'):
+        name = name[name.find("tralchemy.")+10:]
+        if name in ('namespace', 'core', 'dbus', 'uuid', 'query', 'types', 'opcode', 'dis', 'sys', 'dateutil'):
             return None
         if '.' in name:
             return None
