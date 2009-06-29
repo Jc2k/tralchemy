@@ -171,7 +171,13 @@ class Property(Resource, property):
     def __init__(self, uri):
         super(Property, self).__init__(uri)
 
-        sparql = "SELECT ?max ?range ?comment WHERE { %s a rdf:Property . OPTIONAL { %s nrl:maxCardinality ?max } . OPTIONAL { %s rdfs:range ?range } . OPTIONAL { %s rdfs:comment ?comment } }"
+        sparql = "SELECT ?max ?range ?comment WHERE { " \
+                     "%s a rdf:Property . " \
+                     "OPTIONAL { %s nrl:maxCardinality ?max } . " \
+                     "OPTIONAL { %s rdfs:range ?range } . " \
+                     "OPTIONAL { %s rdfs:comment ?comment } " \
+                 "}"
+
         results = tracker_query(sparql % (uri, uri, uri, uri))
         for result in results:
             self.maxcardinality = int(result[0]) if result[0] else None
