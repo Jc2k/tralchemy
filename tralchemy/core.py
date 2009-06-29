@@ -123,6 +123,30 @@ class Resource(object):
         self.triples = {}
 
 
+class PropertyList(object):
+
+    def __init__(self, uri, instance):
+        self.uri = uri
+        self.instance = instance
+        self.vals = []
+
+    def append(self, val):
+        self.instance.triples.setdefault(self.uri, []).append(val)
+
+    def __delitem__(self, idx):
+        print "deleting %s", idx
+
+    def __setitem__(self, idx, value):
+        print "setting %s to %s" % (idx, value)
+
+    def __getitem__(self, idx):
+        print "looking up %s" % idx
+        return ""
+
+    def __len__(self):
+        return len(self.vals)
+
+
 class Property(Resource, property):
 
     _type_ = "rdf:Property"
