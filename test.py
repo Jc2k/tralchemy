@@ -6,7 +6,7 @@ import datetime
 
 import tralchemy
 
-class TralchemyTests(unittest.TestCase):
+class TestClasses(unittest.TestCase):
 
     def test_make_class(self):
         from tralchemy.nid3 import ID3Audio
@@ -17,22 +17,25 @@ class TralchemyTests(unittest.TestCase):
         from tralchemy.rdfs import Class
         obj = Class("nid3:ID3Audio")
 
-    def test_get_property(self):
+
+class TestProperty(unittest.TestCase):
+
+    def test_get(self):
         from tralchemy.rdfs import Class
         obj = Class("nid3:ID3Audio")
         print obj.subclassof
 
-    def test_set_property(self):
+    def test_set(self):
         from tralchemy.rdfs import Class
         obj = Class("nid3:ID3Audio")
         obj.subclassof = "badger"
 
-    def test_property_help(self):
+    def test_help(self):
         from tralchemy.nid3 import ID3Audio
         assert ID3Audio.__doc__ != None
         assert ID3Audio.artist != None
 
-    def test_property_types_string(self):
+    def test_types_string(self):
         from tralchemy.xsd import string
         # If we ask wrapper for a string, we should get a string type
         assert string == str, "Got %s" % type(string)
@@ -42,6 +45,9 @@ class TralchemyTests(unittest.TestCase):
         assert type(ID3Audio.artist) == tralchemy.core.Property, "Got %s" % type(ID3Audio.artist)
         # But now we are access the contents of artist, which is an instance, so it runs __get__ and should return a comment
         assert type(ID3Audio.artist.comment) == str, "Got %s" % type(ID3Audio.artist.comment)
+
+
+class TestRecords(unittest.TestCase):
 
     def test_inject_feed(self):
         from tralchemy.nmo import FeedMessage
@@ -67,7 +73,26 @@ class TralchemyTests(unittest.TestCase):
             b += 1
         assert b == 0
 
-    def test_insert_multiple(self):
+    def test_get_with_criteria(self):
+        from tralchemy.rdfs import Class
+        assert len(list(Class.get())) > len(list(Class.get(notify="true")))
+
+    def test_query(self):
+        from tralchemy.nco import PersonContact
+        from tralchemy.query import Query, Store
+        q = Query(PersonContact.nickname for PersonContact in Store if PersonContact.fullname == "Rob Taylor" or PersonContact.fullname == "John Carr")
+
+
+class TestPropertyList(unittest.TestCase):
+
+    def test_len(self):
+        from tralchemy.rdfs import Class
+        foo = Class("nco:PersonContact")
+        assert len(foo.subclassof) == 1
+        foo = Class("ncal:Event")
+        assert len(foo.subclassof) == 2
+
+    def test_append(self):
         from tralchemy.nco import PersonContact, PhoneNumber
         p = PersonContact.create(commit=False)
         for i in range(5):
@@ -77,8 +102,8 @@ class TralchemyTests(unittest.TestCase):
         assert len(p.hasphonenumber) == 5, "%d != 5" % len(p.hasphonenumber)
         return p.uri
 
-    def test_inspect_multiple(self):
-        uri = self.test_insert_multiple()
+    def test_list(self):
+        uri = self.test_append()
         from tralchemy import PersonContact
         p = PersonContact(uri)
         i = 0
@@ -89,23 +114,6 @@ class TralchemyTests(unittest.TestCase):
         assert i == 5
         assert k == (5+4+3+2+1)
 
-    def test_get_with_criteria(self):
-        from tralchemy.rdfs import Class
-        assert len(list(Class.get())) > len(list(Class.get(notify="true")))
-
-    def test_query(self):
-        from tralchemy.nco import PersonContact
-        from tralchemy.query import Query, Store
-        q = Query(PersonContact.nickname for PersonContact in Store if PersonContact.fullname == "Rob Taylor" or PersonContact.fullname == "John Carr")
-
-class TestPropertyList(unittest.TestCase):
-
-    def test_list(self):
-        from tralchemy.rdfs import Class
-        foo = Class("nco:PersonContact")
-        assert len(foo.subclassof) == 1
-        foo = Class("ncal:Event")
-        assert len(foo.subclassof) == 2
 
 if __name__ == '__main__':
     unittest.main()
