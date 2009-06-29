@@ -42,6 +42,7 @@ ns_to_prefix = {}
 for prefix, namespace in tracker_query("SELECT ?prefix, ?ns WHERE { ?ns tracker:prefix ?prefix }"):
     prefix_to_ns[prefix] = namespace
     ns_to_prefix[namespace] = prefix
+del prefix, namespace
 
 def get_classname(classname):
     """ Takes a classname and flattens it into tracker form """
@@ -102,7 +103,7 @@ class Resource(object):
             if k == "uid" or k =="commit":
                 continue
             setattr(o, k, v)
-        if not 'commit' in kwargs or kwargs['commit'] == True:
+        if not 'commit' in kwargs or kwargs['commit']:
             o.commit()
         return o
 
@@ -167,7 +168,7 @@ class Property(Resource, property):
 
     _type_ = "rdf:Property"
 
-    def __init__(self, uri, doc=""):
+    def __init__(self, uri):
         super(Property, self).__init__(uri)
 
         sparql = "SELECT ?max ?range ?comment WHERE { %s a rdf:Property . OPTIONAL { %s nrl:maxCardinality ?max } . OPTIONAL { %s rdfs:range ?range } . OPTIONAL { %s rdfs:comment ?comment } }"
@@ -180,6 +181,8 @@ class Property(Resource, property):
     def __get__(self, instance, instance_type):
         if instance is None:
             return self
+
+        assert instance_type
 
         if not self.maxcardinality or self.maxcardinality > 1:
             return PropertyList(self.uri, self.range, instance)
