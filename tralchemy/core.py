@@ -289,8 +289,6 @@ class WrapperFactory(object):
             else:
                 filtered.append(j)
 
-        print filtered
-
         # Does this class have notifications?
         if cls.notify:
             attrs['notifications'] = Notifications(cls.uri)
