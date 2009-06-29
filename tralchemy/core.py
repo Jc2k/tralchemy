@@ -128,7 +128,7 @@ class PropertyList(object):
 
     def __init__(self, uri, range, instance):
         self.uri = uri
-        self.range = range
+        self._range_ = range
         self.instance = instance
         self.vals = []
 
@@ -181,8 +181,8 @@ class Property(Resource, property):
         results = tracker_query(sparql % (uri, uri, uri, uri))
         for result in results:
             self.maxcardinality = int(result[0]) if result[0] else None
-            self.range = result[1]
-            self.__doc__ = "%s\n\n@type: %s" % (result[2], get_classname(self.range))
+            self._range_ = result[1]
+            self.__doc__ = "%s\n\n@type: %s" % (result[2], get_classname(self._range_))
 
     def __get__(self, instance, instance_type):
         if instance is None:
@@ -191,7 +191,7 @@ class Property(Resource, property):
         assert instance_type
 
         if not self.maxcardinality or self.maxcardinality > 1:
-            return PropertyList(self.uri, self.range, instance)
+            return PropertyList(self.uri, self._range_, instance)
 
         uri = instance.uri
         if uri.startswith("http://"):
@@ -204,7 +204,7 @@ class Property(Resource, property):
             if self.uri == "rdfs:range":
                 return str(result)
             else:
-                return types.get_class(self.range)(result)
+                return types.get_class(self._range_)(result)
 
     def __set__(self, instance, value):
         if instance is None:
