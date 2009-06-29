@@ -67,6 +67,28 @@ class TralchemyTests(unittest.TestCase):
             b += 1
         assert b == 0
 
+    def test_insert_multiple(self):
+        from tralchemy.nco import PersonContact, PhoneNumber
+        p = PersonContact.create(commit=False)
+        for i in range(5):
+            pn = PhoneNumber.create(phonenumber=str(i))
+            p.hasphonenumber.append(pn)
+        p.commit()
+        assert len(p.hasphonenumber) == 5, "%d != 5" % len(p.hasphonenumber)
+        return p.uri
+
+    def test_inspect_multiple(self):
+        uri = self.test_insert_multiple()
+        from tralchemy import PersonContact
+        p = PersonContact(uri)
+        i = 0
+        k = 0
+        for j in p.hasphonenumber:
+            i += 1
+            k += int(j.phonenumber)
+        assert i == 5
+        assert k == (5+4+3+2+1)
+
     def test_get_with_criteria(self):
         from tralchemy.rdfs import Class
         assert len(list(Class.get())) > len(list(Class.get(notify="true")))
@@ -75,6 +97,15 @@ class TralchemyTests(unittest.TestCase):
         from tralchemy.nco import PersonContact
         from tralchemy.query import Query, Store
         q = Query(PersonContact.nickname for PersonContact in Store if PersonContact.fullname == "Rob Taylor" or PersonContact.fullname == "John Carr")
+
+class TestPropertyList(unittest.TestCase):
+
+    def test_list(self):
+        from tralchemy.rdfs import Class
+        foo = Class("nco:PersonContact")
+        assert len(foo.subclassof) == 1
+        foo = Class("ncal:Event")
+        assert len(foo.subclassof) == 2
 
 if __name__ == '__main__':
     unittest.main()

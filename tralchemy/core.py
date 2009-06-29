@@ -125,23 +125,33 @@ class Resource(object):
 
 class PropertyList(object):
 
-    def __init__(self, uri, instance):
+    def __init__(self, uri, range, instance):
         self.uri = uri
+        self.range = range
         self.instance = instance
         self.vals = []
 
+        instance_uri = instance.uri
+        if instance_uri.startswith("http://"):
+            instance_uri = "<%s>" % uri
+
+        # Get all items of this type
+        for result in tracker_query("SELECT ?o WHERE { %s %s ?o }" % (instance_uri, uri)):
+            result = result[0]
+            self.vals.append(types.get_class(range)(result))
+
     def append(self, val):
         self.instance.triples.setdefault(self.uri, []).append(val)
+        self.vals.append(val)
 
     def __delitem__(self, idx):
-        print "deleting %s", idx
+        raise NotImplementedError
 
     def __setitem__(self, idx, value):
-        print "setting %s to %s" % (idx, value)
+        raise NotImplementedError
 
     def __getitem__(self, idx):
-        print "looking up %s" % idx
-        return ""
+        return self.vals[idx]
 
     def __len__(self):
         return len(self.vals)
@@ -153,12 +163,20 @@ class Property(Resource, property):
 
     def __init__(self, uri, doc=""):
         super(Property, self).__init__(uri)
-        if self.uri != 'rdfs:comment' and self.comment:
-            self.__doc__ = "%s\n\n@type: %s" % (self.comment, get_classname(self.range))
+
+        sparql = "SELECT ?max ?range ?comment WHERE { %s a rdf:Property . OPTIONAL { %s nrl:maxCardinality ?max } . OPTIONAL { %s rdfs:range ?range } . OPTIONAL { %s rdfs:comment ?comment } }"
+        results = tracker_query(sparql % (uri, uri, uri, uri))
+        for result in results:
+            self.maxcardinality = int(result[0]) if result[0] else None
+            self.range = result[1]
+            self.__doc__ = "%s\n\n@type: %s" % (result[2], get_classname(self.range))
 
     def __get__(self, instance, instance_type):
         if instance is None:
             return self
+
+        if not self.maxcardinality or self.maxcardinality > 1:
+            return PropertyList(self.uri, self.range, instance)
 
         uri = instance.uri
         if uri.startswith("http://"):
