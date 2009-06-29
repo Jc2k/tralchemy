@@ -272,6 +272,19 @@ class WrapperFactory(object):
         if not baseclass:
             baseclass.append(Resource)
 
+        # An ontology might well have a pointless inheritenance chain
+        # For example nmo:Message(TextDocument, InformationElement) - TextDocument is already an InfoEle!
+        # Lets ignore the pointless inheritance and reduce chances of MRO related fail
+        filtered = []
+        for j in baseclass:
+            for k in baseclass:
+                if j != k and issubclass(k, j):
+                    break
+            else:
+                filtered.append(j)
+
+        print filtered
+
         # Does this class have notifications?
         if cls.notify:
             attrs['notifications'] = Notifications(cls.uri)
@@ -282,7 +295,7 @@ class WrapperFactory(object):
                 attrs[prop.label.lower().replace(" ", "_")] = prop
 
         # Make a new class
-        klass = type(str(classname), tuple(baseclass), attrs)
+        klass = type(str(classname), tuple(filtered), attrs)
 
         # Cache it for later
         self.wrapped[klass._type_] = klass
