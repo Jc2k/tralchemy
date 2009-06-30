@@ -26,6 +26,7 @@ class Namespace(types.ModuleType):
     def __getattr__(self, name):
         from .core import WrapperFactory
         cls = WrapperFactory().get_class("%s:%s" % (self.__name__, name))
+        cls.__module__ = self.__name__
         if not cls:
             raise AttributeError("%r object has no attribute %r" % (
                     self.__class__.__name__, name))
