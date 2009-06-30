@@ -1,8 +1,8 @@
 
-import os, sys
+import os, sys, types
 
 
-class Namespace(object):
+class Namespace(types.ModuleType):
     """ Class representing a tracker namespace """
 
     def __init__(self, loader):
@@ -33,8 +33,7 @@ class Namespace(object):
         self.__dict__[name] = cls
         return cls
 
-    @property
-    def __members__(self):
+    def __dir__(self):
         from .core import WrapperFactory
         Class = WrapperFactory().get_class("rdfs:Class")
         members = []
@@ -42,6 +41,8 @@ class Namespace(object):
             if cls.uri.startswith(self.__name__ + ":"):
                 members.append(cls.uri[len(self.__name__)+1:])
         return members
+
+    __all__ = property(__dir__)
 
 
 class NamespaceFinder(object):
