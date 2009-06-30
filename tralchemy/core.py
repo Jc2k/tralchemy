@@ -239,7 +239,7 @@ class Class(Resource):
 
     _type_ = "rdfs:Class"
 
-    subclassof = Property("rdfs:subClassOf")
+    subClassOf = Property("rdfs:subClassOf")
     notify = Property("tracker:notify")
 
 
@@ -304,7 +304,12 @@ class WrapperFactory(object):
 
         # Enumerate all properties of this class
         for prop in Property.get(domain=cls.uri):
-            if prop.label:
+            if len(prop.uri.split(":")) == 2:
+                attrs[prop.uri.split(":")[1]] = prop
+            elif len(prop.uri.split("#")) == 2:
+                attrs[prop.uri.split("#")[1]] = prop
+            elif prop.label:
+                # shouldn't ever get here?
                 attrs[prop.label.lower().replace(" ", "_")] = prop
 
         # Make a new class

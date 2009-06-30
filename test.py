@@ -23,17 +23,17 @@ class TestProperty(unittest.TestCase):
     def test_get(self):
         from tralchemy.rdfs import Class
         obj = Class("nid3:ID3Audio")
-        print obj.subclassof
+        print obj.subClassOf
 
     def test_set(self):
         from tralchemy.rdfs import Class
         obj = Class("nid3:ID3Audio")
-        obj.subclassof = "badger"
+        obj.subClassOf = "badger"
 
     def test_help(self):
         from tralchemy.nid3 import ID3Audio
         assert ID3Audio.__doc__ != None
-        assert ID3Audio.artist != None
+        assert ID3Audio.leadArtist != None
 
     def test_types_string(self):
         from tralchemy.xsd import string
@@ -42,9 +42,9 @@ class TestProperty(unittest.TestCase):
 
         from tralchemy.nid3 import ID3Audio
         # cls1 is a class, so accessing properties on it will return self rather then actually doing anything in __get__
-        assert type(ID3Audio.artist) == tralchemy.core.Property, "Got %s" % type(ID3Audio.artist)
+        assert type(ID3Audio.leadArtist) == tralchemy.core.Property, "Got %s" % type(ID3Audio.leadArtist)
         # But now we are access the contents of artist, which is an instance, so it runs __get__ and should return a comment
-        assert type(ID3Audio.artist.comment) == str, "Got %s" % type(ID3Audio.artist.comment)
+        assert type(ID3Audio.leadArtist.comment) == str, "Got %s" % type(ID3Audio.leadArtist.comment)
 
 
 class TestRecords(unittest.TestCase):
@@ -83,18 +83,18 @@ class TestPropertyList(unittest.TestCase):
     def test_len(self):
         from tralchemy.rdfs import Class
         foo = Class("nco:PersonContact")
-        assert len(foo.subclassof) == 1
+        assert len(foo.subClassOf) == 1
         foo = Class("ncal:Event")
-        assert len(foo.subclassof) == 2
+        assert len(foo.subClassOf) == 2
 
     def test_append(self):
         from tralchemy.nco import PersonContact, PhoneNumber
         p = PersonContact.create(commit=False)
         for i in range(5):
             pn = PhoneNumber.create(phonenumber=str(i))
-            p.hasphonenumber.append(pn)
+            p.hasPhoneNumber.append(pn)
         p.commit()
-        assert len(p.hasphonenumber) == 5, "%d != 5" % len(p.hasphonenumber)
+        assert len(p.hasPhoneNumber) == 5, "%d != 5" % len(p.hasPhoneNumber)
         return p.uri
 
     def test_list(self):
@@ -103,7 +103,7 @@ class TestPropertyList(unittest.TestCase):
         p = PersonContact(uri)
         i = 0
         k = 0
-        for j in p.hasphonenumber:
+        for j in p.hasPhoneNumber:
             i += 1
             k += int(j.phonenumber)
         assert i == 5
