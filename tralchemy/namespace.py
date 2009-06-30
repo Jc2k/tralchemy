@@ -5,28 +5,27 @@ import os, sys
 class Namespace(object):
     """ Class representing a tracker namespace """
 
-    def __init__(self, namespace, path):
-        self._namespace = namespace
-        self._path = path
+    def __init__(self, loader):
+        self._loader = loader
 
     @property
     def __file__(self):
-        return self._namespace
+        return self._loader.name
 
     @property
     def __name__(self):
-        return self._namespace
+        return self._loader.name
 
     @property
     def __path__(self):
-        return [os.path.dirname(self.__file__)]
+        return []
 
     def __repr__(self):
-        return "<namespace %r from %r>" % (self._namespace, self._path)
+        return "<namespace %r from %r>" % (self.__name__, self._path)
 
     def __getattr__(self, name):
         from .core import WrapperFactory
-        cls = WrapperFactory().get_class("%s:%s" % (self._namespace, name))
+        cls = WrapperFactory().get_class("%s:%s" % (self.__name__, name))
         if not cls:
             raise AttributeError("%r object has no attribute %r" % (
                     self.__class__.__name__, name))
@@ -36,12 +35,16 @@ class Namespace(object):
 
     @property
     def __members__(self):
-        r = []
-        #FIXME: Return names of all objects defined in this namespace
-        return r
+        from .core import WrapperFactory
+        Class = WrapperFactory().get_class("rdfs:Class")
+        members = []
+        for cls in Class.get():
+            if cls.uri.startswith(self.__name__ + ":"):
+                members.append(cls.uri[len(self.__name__)+1:])
+        return members
 
 
-class Importer(object):
+class NamespaceFinder(object):
     """ Class to register with python so we can dynamically generate modules """
 
     def __init__(self, name, path):
@@ -58,12 +61,19 @@ class Importer(object):
             return None
         if '.' in name:
             return None
-        return Importer(name, path)
+        return NamespaceLoader(name, path)
+
+
+class NamespaceLoader(object):
+
+    def __init__(self, name, path):
+        self.name = name
+        self.path = path
 
     def load_module(self, name):
-        return Namespace(self.name, self.path)
+        return Namespace(self)
 
 
 def install_importhook():
-    sys.meta_path.append(Importer)
+    sys.meta_path.append(NamespaceFinder)
 
