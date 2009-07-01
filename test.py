@@ -17,6 +17,11 @@ class TestClasses(unittest.TestCase):
         from tralchemy.rdfs import Class
         obj = Class("nid3:ID3Audio")
 
+    def test_pydoc_classname(self):
+        import pydoc
+        from tralchemy.rdfs import Class
+        assert pydoc.classname(Class, "tralchemy.rdfs") == "Class"
+        assert pydoc.classname(Class, "tralchemy.rdf") == "tralchelmy.rdfs.Class"
 
 class TestProperty(unittest.TestCase):
 

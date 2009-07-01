@@ -71,6 +71,7 @@ class Resource(object):
     """ Everything is a resource """
 
     _type_ = "rdfs:Resource"
+    __module__ = "tralchemy.rdfs"
 
     def __init__(self, uri):
         self.uri = get_classname(uri)
@@ -167,6 +168,7 @@ class PropertyList(object):
 class Property(Resource, property):
 
     _type_ = "rdf:Property"
+    __module__ = "tralchemy.rdf"
 
     def __init__(self, uri):
         super(Property, self).__init__(uri)
@@ -238,6 +240,7 @@ Property.transient = Property("tracker:transient")
 class Class(Resource):
 
     _type_ = "rdfs:Class"
+    __module__ = "tralchemy.rdfs"
 
     subClassOf = Property("rdfs:subClassOf")
     notify = Property("tracker:notify")
