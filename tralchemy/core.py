@@ -319,7 +319,7 @@ class WrapperFactory(object):
                 attrs[prop.label.lower().replace(" ", "_")] = prop
 
         # Make a new class
-        klass = type(str(classname), tuple(filtered), attrs)
+        klass = type(str(name), tuple(filtered), attrs)
 
         # Cache it for later
         self.wrapped[klass._type_] = klass
