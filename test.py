@@ -10,8 +10,8 @@ class TestClasses(unittest.TestCase):
 
     def test_make_class(self):
         from tralchemy.nid3 import ID3Audio
-        assert ID3Audio != None
-        assert 'title' in dir(ID3Audio)
+        self.failIfEqual(ID3Audio, None)
+        self.failUnless('title' in dir(ID3Audio))
 
     def test_instance_class(self):
         from tralchemy.rdfs import Class
@@ -20,15 +20,15 @@ class TestClasses(unittest.TestCase):
     def test_pydoc_classname(self):
         import pydoc
         from tralchemy.rdfs import Class
-        assert pydoc.classname(Class, "tralchemy.rdfs") == "Class"
-        assert pydoc.classname(Class, "tralchemy.rdf") == "tralchelmy.rdfs.Class"
+        self.failUnlessEqual(pydoc.classname(Class, "tralchemy.rdfs"), "Class")
+        self.failUnlessEqual(pydoc.classname(Class, "tralchemy.rdf"), "tralchemy.rdfs.Class")
 
 class TestProperty(unittest.TestCase):
 
     def test_get(self):
         from tralchemy.rdfs import Class
         obj = Class("nid3:ID3Audio")
-        print obj.subClassOf
+        self.failUnlessEqual(len(obj.subClassOf), 1)
 
     def test_set(self):
         from tralchemy.rdfs import Class
@@ -37,19 +37,19 @@ class TestProperty(unittest.TestCase):
 
     def test_help(self):
         from tralchemy.nid3 import ID3Audio
-        assert ID3Audio.__doc__ != None
-        assert ID3Audio.leadArtist != None
+        self.failIfEqual(ID3Audio.__doc__, None)
+        self.failIfEqual(ID3Audio.leadArtist, None)
 
     def test_types_string(self):
         from tralchemy.xsd import string
         # If we ask wrapper for a string, we should get a string type
-        assert string == str, "Got %s" % type(string)
+        self.failUnlessEqual(string, str)
 
         from tralchemy.nid3 import ID3Audio
         # cls1 is a class, so accessing properties on it will return self rather then actually doing anything in __get__
-        assert type(ID3Audio.leadArtist) == tralchemy.core.Property, "Got %s" % type(ID3Audio.leadArtist)
+        self.failUnlessEqual(type(ID3Audio.leadArtist), tralchemy.core.Property)
         # But now we are access the contents of artist, which is an instance, so it runs __get__ and should return a comment
-        assert type(ID3Audio.leadArtist.comment) == str, "Got %s" % type(ID3Audio.leadArtist.comment)
+        self.failUnlessEqual(type(ID3Audio.leadArtist.comment), str)
 
 
 class TestRecords(unittest.TestCase):
@@ -72,15 +72,15 @@ class TestRecords(unittest.TestCase):
         for msg in FeedMessage.get():
             a += 1
             msg.delete()
-        assert a > 0
+        self.failUnless(a > 0)
         b = 0
         for msg in FeedMessage.get():
             b += 1
-        assert b == 0
+        self.failUnlessEqual(b, 0)
 
     def test_get_with_criteria(self):
         from tralchemy.rdfs import Class
-        assert len(list(Class.get())) > len(list(Class.get(notify="true")))
+        self.failUnless(len(list(Class.get())) > len(list(Class.get(notify="true"))))
 
 
 class TestPropertyList(unittest.TestCase):
@@ -88,9 +88,9 @@ class TestPropertyList(unittest.TestCase):
     def test_len(self):
         from tralchemy.rdfs import Class
         foo = Class("nco:PersonContact")
-        assert len(foo.subClassOf) == 1
+        self.failUnlessEqual(len(foo.subClassOf), 1)
         foo = Class("ncal:Event")
-        assert len(foo.subClassOf) == 2
+        self.failUnlessEqual(len(foo.subClassOf), 2)
 
     def test_append(self):
         from tralchemy.nco import PersonContact, PhoneNumber
@@ -99,7 +99,7 @@ class TestPropertyList(unittest.TestCase):
             pn = PhoneNumber.create(phonenumber=str(i))
             p.hasPhoneNumber.append(pn)
         p.commit()
-        assert len(p.hasPhoneNumber) == 5, "%d != 5" % len(p.hasPhoneNumber)
+        self.failUnlessEqual(len(p.hasPhoneNumber), 5)
         return p.uri
 
     def test_list(self):
@@ -111,8 +111,8 @@ class TestPropertyList(unittest.TestCase):
         for j in p.hasPhoneNumber:
             i += 1
             k += int(j.phonenumber)
-        assert i == 5
-        assert k == (5+4+3+2+1)
+        self.failUnlessEqual(i, 5)
+        self.failUnlessEqual(k, (5+4+3+2+1))
 
 
 if __name__ == '__main__':
