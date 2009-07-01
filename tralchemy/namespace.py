@@ -24,9 +24,8 @@ class Namespace(types.ModuleType):
         return "<namespace %r from %r>" % (self.__name__, self._path)
 
     def __getattr__(self, name):
-        from .core import WrapperFactory
-        cls = WrapperFactory().get_class("%s:%s" % (self.__name__, name))
-        cls.__module__ = self.__name__
+        from .core import types
+        cls = types.get_class("%s:%s" % (self.__name__, name))
         if not cls:
             raise AttributeError("%r object has no attribute %r" % (
                     self.__class__.__name__, name))
@@ -35,8 +34,8 @@ class Namespace(types.ModuleType):
         return cls
 
     def __dir__(self):
-        from .core import WrapperFactory
-        Class = WrapperFactory().get_class("rdfs:Class")
+        from .core import types
+        Class = types.get_class("rdfs:Class")
         members = []
         for cls in Class.get():
             if cls.uri.startswith(self.__name__ + ":"):

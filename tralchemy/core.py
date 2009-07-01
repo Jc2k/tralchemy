@@ -272,12 +272,15 @@ class WrapperFactory(object):
         if classname in self.wrapped:
             return self.wrapped[classname]
 
+        ns, name = classname.split(":")
+
         # Look up this class in tracker
         cls = Class(classname)
 
         attrs = {
             "_type_": cls.uri,
-            "__doc__": cls.comment or ""
+            "__doc__": cls.comment or "",
+            "__module__": "tralchemy.%s" % ns,
         }
 
         baseclass = []
