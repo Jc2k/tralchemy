@@ -6,6 +6,19 @@ import datetime
 
 import tralchemy
 
+class TestNamespaces(unittest.TestCase):
+
+    def test_import(self):
+        from types import ModuleType
+        from tralchemy import rdf
+        self.failUnless(isinstance(rdf, ModuleType))
+        import tralchemy.rdfs
+        self.failUnless(isinstance(tralchemy.rdfs, ModuleType))
+
+    def test_import_fail(self):
+        self.failUnlessRaises(ImportError, __import__, "tralchemy.no_such_ontology")
+        self.failUnlessRaises(ImportError, __import__, "tralchemy.no.nested.ontologies")
+
 class TestClasses(unittest.TestCase):
 
     def test_make_class(self):
