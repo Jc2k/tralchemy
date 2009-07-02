@@ -96,7 +96,7 @@ class TestPropertyList(unittest.TestCase):
         from tralchemy.nco import PersonContact, PhoneNumber
         p = PersonContact.create(commit=False)
         for i in range(5):
-            pn = PhoneNumber.create(phonenumber=str(i))
+            pn = PhoneNumber.create(phoneNumber=str(i))
             p.hasPhoneNumber.append(pn)
         p.commit()
         self.failUnlessEqual(len(p.hasPhoneNumber), 5)
@@ -110,7 +110,7 @@ class TestPropertyList(unittest.TestCase):
         k = 0
         for j in p.hasPhoneNumber:
             i += 1
-            k += int(j.phonenumber)
+            k += int(j.phoneNumber)
         self.failUnlessEqual(i, 5)
         self.failUnlessEqual(k, (5+4+3+2+1))
 
