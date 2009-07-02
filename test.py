@@ -104,7 +104,7 @@ class TestPropertyList(unittest.TestCase):
 
     def test_list(self):
         uri = self.test_append()
-        from tralchemy import PersonContact
+        from tralchemy.nco import PersonContact
         p = PersonContact(uri)
         i = 0
         k = 0
