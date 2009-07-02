@@ -76,6 +76,7 @@ class Resource(object):
     def __init__(self, uri):
         self.uri = get_classname(uri)
         self.triples = {}
+        self.cache = {}
 
     def properties(self):
         uri = self.uri
@@ -190,10 +191,13 @@ class Property(Resource, property):
         if instance is None:
             return self
 
+        # Just so pychecker doesnt moan
         assert instance_type
 
         if not self.maxcardinality or self.maxcardinality > 1:
-            return PropertyList(self.uri, self._range_, instance)
+            if not self.uri in instance.cache:
+                instance.cache[self.uri] = PropertyList(self.uri, self._range_, instance)
+            return instance.cache[self.uri]
 
         uri = instance.uri
         if uri.startswith("http://"):
