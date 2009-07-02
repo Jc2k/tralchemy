@@ -1,8 +1,10 @@
 
-import os, sys, types
+import os, sys
+from types import ModuleType
 
+from .core import types, namespaces
 
-class Namespace(types.ModuleType):
+class Namespace(ModuleType):
     """ Class representing a tracker namespace """
 
     def __init__(self, loader):
@@ -54,15 +56,21 @@ class NamespaceFinder(object):
 
     @staticmethod
     def find_module(name, path=None):
-        #FIXME: This function is a bit of a hack
-        if not "tralchemy." in name:
+        names = name.split(".")
+
+        # We only support imports of tralchemy.<namespace_name>
+        if len(names) != 2 or names[0] != "tralchemy":
             return None
-        name = name[name.find("tralchemy.")+10:]
-        if name in ('namespace', 'core', 'dbus', 'uuid', 'query', 'types', 'opcode', 'dis', 'sys', 'dateutil'):
+
+        # To avoid pain misery and suffering, don't do anything clever for
+        # our interals..
+        if names[1] in ("core", "namespace"):
             return None
-        if '.' in name:
+
+        if not names[1] in namespaces.values():
             return None
-        return NamespaceLoader(name, path)
+
+        return NamespaceLoader(names[1], path)
 
 
 class NamespaceLoader(object):
