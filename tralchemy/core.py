@@ -37,17 +37,15 @@ def tracker_update(sparql):
     return tracker.SparqlUpdate(sparql)
 
 # Map tracker prefixes to ontology namespaces and back
-prefix_to_ns = {}
-ns_to_prefix = {}
+namespaces = {}
 for prefix, namespace in tracker_query("SELECT ?prefix, ?ns WHERE { ?ns tracker:prefix ?prefix }"):
-    prefix_to_ns[prefix] = namespace
-    ns_to_prefix[namespace] = prefix
+    namespaces[namespace] = prefix
 del prefix, namespace
 
 def get_classname(classname):
     """ Takes a classname and flattens it into tracker form """
     if classname.startswith("http://"):
-        for ns, prefix in ns_to_prefix.iteritems():
+        for ns, prefix in namespaces.iteritems():
             if classname.startswith(ns):
                 return prefix + ":" + classname[len(ns):]
     return classname
