@@ -341,20 +341,3 @@ class WrapperFactory(object):
 
 types = WrapperFactory()
 
-if __name__ == "__main__":
-    #help(w.get_class("rdfs:Resource"))
-    #help(w.get_class("rdfs:Class"))
-    self = __import__(__name__)
-    for cls in Class.get():
-        cls = types.get_class(cls.uri)
-        setattr(self, cls.__name__, cls)
-    help(self)
-
-    foo = {}
-    for p in Property.get():
-        foo.setdefault(p.range, 0)
-        foo[p.range] += 1
-
-    for k, v in foo.items():
-        print k, v
-
