@@ -136,16 +136,24 @@ class PropertyList(object):
 
         instance_uri = instance.uri
         if instance_uri.startswith("http://"):
-            instance_uri = "<%s>" % uri
+            instance_uri = "<%s>" % instance_uri
 
         # Get all items of this type
         for result in tracker_query("SELECT ?o WHERE { %s %s ?o }" % (instance_uri, uri)):
             result = result[0]
             self.vals.append(types.get_class(range)(result))
 
-    def append(self, val):
-        self.instance.triples.setdefault(self.uri, []).append(val)
-        self.vals.append(val)
+    def append(self, value):
+        if isinstance(value, Resource):
+            if value.uri.startswith("http://"):
+                eval = "<%s>" % value.uri
+            else:
+                eval = value.uri
+        else:
+            eval = '"%s"' % value
+
+        self.instance.triples.setdefault(self.uri, []).append(eval)
+        self.vals.append(value)
 
     def __delitem__(self, idx):
         raise NotImplementedError
@@ -158,6 +166,9 @@ class PropertyList(object):
 
     def __len__(self):
         return len(self.vals)
+
+    def __iter__(self):
+        return iter(self.vals)
 
     def __repr__(self):
         return repr(self.vals)

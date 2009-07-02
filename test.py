@@ -112,7 +112,7 @@ class TestPropertyList(unittest.TestCase):
             i += 1
             k += int(j.phoneNumber)
         self.failUnlessEqual(i, 5)
-        self.failUnlessEqual(k, (5+4+3+2+1))
+        self.failUnlessEqual(k, (4+3+2+1+0))
 
 
 if __name__ == '__main__':
