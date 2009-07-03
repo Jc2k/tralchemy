@@ -196,6 +196,9 @@ class Property(Resource, property):
             self._range_ = result[1]
             self.__doc__ = "%s\n\n@type: %s" % (result[2], get_classname(self._range_))
 
+    def is_list(self):
+        return not self.maxcardinality or self.maxcardinality > 1
+
     def __get__(self, instance, instance_type):
         if instance is None:
             return self
@@ -203,7 +206,7 @@ class Property(Resource, property):
         # Just so pychecker doesnt moan
         assert instance_type
 
-        if not self.maxcardinality or self.maxcardinality > 1:
+        if self.is_list():
             if not self.uri in instance.cache:
                 instance.cache[self.uri] = PropertyList(self.uri, self._range_, instance)
             return instance.cache[self.uri]
@@ -224,6 +227,10 @@ class Property(Resource, property):
     def __set__(self, instance, value):
         if instance is None:
             return
+
+        if self.is_list():
+            raise ValueError("Cannot assign directly to a list property")
+
         if isinstance(value, Resource):
             if value.uri.startswith("http://"):
                 instance.triples[self.uri] = "<%s>" % value.uri
