@@ -29,6 +29,7 @@ import tralchemy
 class TestNamespaces(unittest.TestCase):
 
     def test_import(self):
+        """ Should be able to import a module for a namespace """
         from types import ModuleType
         from tralchemy import rdf
         self.failUnless(isinstance(rdf, ModuleType))
@@ -36,44 +37,58 @@ class TestNamespaces(unittest.TestCase):
         self.failUnless(isinstance(tralchemy.rdfs, ModuleType))
 
     def test_import_fail(self):
+        """ Should get an ImportError if there is no such name space """
         self.failUnlessRaises(ImportError, __import__, "tralchemy.no_such_ontology")
         self.failUnlessRaises(ImportError, __import__, "tralchemy.no.nested.ontologies")
+
 
 class TestClasses(unittest.TestCase):
 
     def test_make_class(self):
+        """ Should be able to get an object representing a class in the ontologies """
         from tralchemy.nid3 import ID3Audio
         self.failIfEqual(ID3Audio, None)
         self.failUnless('title' in dir(ID3Audio))
 
     def test_instance_class(self):
+        """ Should be able to make an instance of a class from the ontologies """
         from tralchemy.rdfs import Class
         obj = Class("nid3:ID3Audio")
 
     def test_pydoc_classname(self):
+        """ pydoc should name the classes appropriately """
         import pydoc
         from tralchemy.rdfs import Class
         self.failUnlessEqual(pydoc.classname(Class, "tralchemy.rdfs"), "Class")
         self.failUnlessEqual(pydoc.classname(Class, "tralchemy.rdf"), "tralchemy.rdfs.Class")
 
+    def test_help(self):
+        """ Make sure classes have docstrings """
+        from tralchemy.nid3 import ID3Audio
+        self.failIfEqual(ID3Audio.__doc__, None)
+
+
 class TestProperty(unittest.TestCase):
 
     def test_get(self):
+        """ Should be able to get properties """
         from tralchemy.rdfs import Class
         obj = Class("nid3:ID3Audio")
-        self.failUnlessEqual(len(obj.subClassOf), 1)
+        a = obj.modified
 
     def test_set(self):
+        """ Should be able to set properties """
         from tralchemy.rdfs import Class
         obj = Class("nid3:ID3Audio")
-        obj.subClassOf = "badger"
+        obj.notify = True
 
     def test_help(self):
+        """ Poke help """
         from tralchemy.nid3 import ID3Audio
-        self.failIfEqual(ID3Audio.__doc__, None)
-        self.failIfEqual(ID3Audio.leadArtist, None)
+        self.failIfEqual(ID3Audio.leadArtist.__doc__, None)
 
     def test_types_string(self):
+        """ Test types of properties """
         from tralchemy.xsd import string
         # If we ask wrapper for a string, we should get a string type
         self.failUnlessEqual(string, str)
@@ -88,6 +103,7 @@ class TestProperty(unittest.TestCase):
 class TestRecords(unittest.TestCase):
 
     def test_inject_feed(self):
+        """ Should be able to commit objects """
         from tralchemy.nmo import FeedMessage
         feedmsg = FeedMessage("http://localhost/feed/%s" % str(uuid.uuid4()))
         today = datetime.datetime.today()
@@ -99,6 +115,7 @@ class TestRecords(unittest.TestCase):
         feedmsg.commit()
 
     def test_delete(self):
+        """ Should be able to delete objects """
         from tralchemy.nmo import FeedMessage
         self.test_inject_feed()
         a = 0
@@ -112,6 +129,7 @@ class TestRecords(unittest.TestCase):
         self.failUnlessEqual(b, 0)
 
     def test_get_with_criteria(self):
+        """ Should be able to fetch a subset of the store objects """
         from tralchemy.rdfs import Class
         self.failUnless(len(list(Class.get())) > len(list(Class.get(notify="true"))))
 
@@ -119,6 +137,7 @@ class TestRecords(unittest.TestCase):
 class TestPropertyList(unittest.TestCase):
 
     def test_len(self):
+        """ Should be able to get the length of a list property """
         from tralchemy.rdfs import Class
         foo = Class("nco:PersonContact")
         self.failUnlessEqual(len(foo.subClassOf), 1)
@@ -126,6 +145,7 @@ class TestPropertyList(unittest.TestCase):
         self.failUnlessEqual(len(foo.subClassOf), 2)
 
     def test_append(self):
+        """ Should be able to append to a lst property """
         from tralchemy.nco import PersonContact, PhoneNumber
         p = PersonContact.create(commit=False)
         for i in range(5):
@@ -136,6 +156,7 @@ class TestPropertyList(unittest.TestCase):
         return p.uri
 
     def test_list(self):
+        """ Should be able to retrieve a list from a property """
         uri = self.test_append()
         from tralchemy.nco import PersonContact
         p = PersonContact(uri)
@@ -146,6 +167,14 @@ class TestPropertyList(unittest.TestCase):
             k += int(j.phoneNumber)
         self.failUnlessEqual(i, 5)
         self.failUnlessEqual(k, (4+3+2+1+0))
+
+    def test_dont_assign_to_list(self):
+        """ Don't support directly assigning to a list property """
+        #FIXME: In the future, you might be able to accept a list/set/tuple, and this test will
+        # need to be relaxed
+        from tralchemy.rdfs import Class
+        cls = Class("rdfs:Class")
+        self.failUnlessRaises(ValueError, setattr, cls, "subClassOf", "yourface")
 
 
 if __name__ == '__main__':
