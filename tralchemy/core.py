@@ -255,6 +255,7 @@ Property.range = Property("rdfs:range")
 Property.indexed = Property("tracker:indexed")
 Property.fulltextindexed = Property("tracker:fulltextIndexed")
 Property.transient = Property("tracker:transient")
+Property.maxcardinality = Property("nrl:maxCardinality")
 
 
 class Class(Resource):
@@ -264,7 +265,6 @@ class Class(Resource):
 
     subClassOf = Property("rdfs:subClassOf")
     notify = Property("tracker:notify")
-
 
 
 class WrapperFactory(object):
