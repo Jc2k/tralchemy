@@ -192,12 +192,12 @@ class Property(Resource, property):
 
         results = tracker_query(sparql % (uri, uri, uri, uri))
         for result in results:
-            self.maxcardinality = int(result[0]) if result[0] else None
+            self._maxcard_ = int(result[0]) if result[0] else None
             self._range_ = result[1]
             self.__doc__ = "%s\n\n@type: %s" % (result[2], get_classname(self._range_))
 
     def is_list(self):
-        return not self.maxcardinality or self.maxcardinality > 1
+        return not self._maxcard_ or self._maxcard_ > 1
 
     def __get__(self, instance, instance_type):
         if instance is None:
