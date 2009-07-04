@@ -9,9 +9,6 @@ import tralchemy
 from tralchemy.rdfs import Class
 
 if __name__ == '__main__':
-
-    holdrefs = []
-
     for cls in Class.get(notify="true"):
         def added(subjects):
             print cls.uri, subjects
@@ -20,10 +17,9 @@ if __name__ == '__main__':
         def removed(subjects):
             print cls.uri, subjects
         kls = tralchemy.core.types.get_class(cls.uri)
-        kls.notifications.connect("SubjectsAdded", added)
-        kls.notifications.connect("SubjectsChanged", changed)
-        kls.notifications.connect("SubjectsRemoved", changed)
-        holdrefs.append(kls)
+        kls.added.subscribe(added)
+        kls.changed.subscribe(changed)
+        kls.removed.subscribe(removed)
 
     loop = glib.MainLoop()
     loop.run()
